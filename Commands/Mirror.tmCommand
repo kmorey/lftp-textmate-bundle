@@ -16,7 +16,7 @@ python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --mirror "$TM_SELECTED_FILE" -c "$TM_
 	<key>name</key>
 	<string>Mirror (push)</string>
 	<key>output</key>
-	<string>showAsHTML</string>
+	<string>discard</string>
 	<key>uuid</key>
 	<string>7E11CEBC-BDAA-45B5-BFED-75AA0CA5F426</string>
 </dict>
