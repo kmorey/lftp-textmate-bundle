@@ -19,7 +19,7 @@ class OptionParser (optparse.OptionParser):
 			
 		self.error("One of the following options not supplied: %s" % ", ".join(opts))
 
-DEBUG=False
+DEBUG=True
 
 def run():
 	parser=OptionParser()
@@ -39,6 +39,7 @@ def run():
 	files=glob.glob(options.config_dir+'/*.json')
 
 	readone=False
+	msg=""
 	for f in files:
 		#load config
 		fp=open(f)
@@ -47,21 +48,24 @@ def run():
 	
 		#error checking
 		error=False
-		msg=""
-		if not 'host' in config: error=True; msg+="'host' not specified.\n"
-		if not 'user' in config: error=True; msg+="'user' not specified.\n";
-		if not 'pass' in config: error=True; msg+="'pass' not specified.\n";
-		if not 'local_path' in config: error=True; msg+="'local_path' not specified.\n";
-		if not 'remote_path' in config: error=True; msg+="'remote_path' not specified.\n";
+		if not 'host' in config: error=True
+		if not 'user' in config: error=True
+		if not 'pass' in config: error=True
+		if not 'local_path' in config: error=True
+		if not 'remote_path' in config: error=True
 		if error:
-			print msg
 			continue
 	
+		local_path=os.path.realpath(config['local_path'])
+		relpath=os.path.relpath(getFilename(options), local_path)
+		
 		if DEBUG:
-			print "Loaded %s..." % (f)
+			print "Loaded %s...<br />" % (f)
+			print getFilename(options)+"<br />"
+			print local_path+"<br />"
+			print "relpath=%s<br />" % relpath
 			#print config
 		
-		relpath=os.path.relpath(getFilename(options), config['local_path'])
 		
 		if relpath.find("..") == -1:
 			#we have a match
@@ -75,7 +79,11 @@ def run():
 			success=subprocess.call(cmd, shell=True)
 			if success==0: 
 				msg+=success_msg+"\n"
+			else:
+				msg+="fail?\n"
 				
+		if DEBUG: print "<hr />"
+		
 	if not readone:
 		msg="No sites found for the current file."
 	
@@ -85,11 +93,12 @@ def getFtpCommand(options, config):
 	#if DEBUG: print "Uploading '%s' to %s..." % (relpath, config['host'])
 	
 	fname = getFilename(options)
-	relpath = os.path.relpath(fname, config['local_path'])
+	local_path=os.path.realpath(config['local_path'])
+	relpath = os.path.relpath(fname, local_path)
 	filename = os.path.basename(fname)
 
 	remote_path = os.path.join(config['remote_path'], relpath)
-	local_path = os.path.join(config['local_path'], relpath)
+	local_path = os.path.join(local_path, relpath)
 	
 	#always make local path a folder
 	if os.path.isfile(local_path):
@@ -101,13 +110,13 @@ def getFtpCommand(options, config):
 	if options.put is not None:
 		if not os.path.isfile(options.put): return (None, 'File does not exist.')
 		ftp_cmds = 'lcd %s; mkdir -p %s; cd %s; put %s' % (config['local_path'], remote_path, remote_path, relpath)
-		success_msg = "Uploaded '%s' to %s.\n" % (filename, config['host'])
+		success_msg = "Uploaded '%s' to %s." % (filename, config['host'])
 	elif options.fetch is not None:
 		ftp_cmds = 'lcd %s; cd %s; get %s' % (local_path, remote_path, relpath)
-		success_msg = "Fetched '%s' from %s.\n" % (filename, config['host'])
+		success_msg = "Fetched '%s' from %s." % (filename, config['host'])
 	elif options.mirror is not None:
 		ftp_cmds = 'mirror -R %s %s' % (local_path, remote_path)
-		success_msg = "Mirrored '%s' from %s.\n" % (local_path, config['host'])
+		success_msg = "Mirrored '%s' from %s." % (local_path, config['host'])
 		
 	cmd = 'lftp -c "o %s; user %s %s; %s"' % (getHostUri(config), config['user'], config['pass'], ftp_cmds)
 
@@ -131,7 +140,7 @@ def getHostUri(config):
 	return protocol+"://"+host
 
 def growl(title, message):	
-	subprocess.call('growlnotify -n lftp.bundle -t %s -m "%s"' % (title, message), shell=True)
+	subprocess.call('growlnotify -n lftp.bundle -t "%s" -m "%s"' % (title, message), shell=True)
 	
 (success, message) = run()
 if success:

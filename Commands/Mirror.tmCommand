@@ -8,9 +8,9 @@
 	<string>#project selected: $TM_SELECTED_FILE
 require_cmd python2.6
 
-python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --mirror "$TM_SELECTED_FILE" -c "$TM_BUNDLE_SUPPORT/config"</string>
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --mirror "$TM_SELECTED_FILE" -c "/Users/kevin.morey/Dropbox/TextMate/config"</string>
 	<key>input</key>
-	<string>selection</string>
+	<string>none</string>
 	<key>keyEquivalent</key>
 	<string>^@p</string>
 	<key>name</key>
