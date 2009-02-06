@@ -8,7 +8,7 @@
 	<string>#project selected: $TM_SELECTED_FILE
 require_cmd python2.6
 
-python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config"</string>
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config"|CocoaDialog progressbar --title "Upload" --text "Uploading ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate</string>
 	<key>fallbackInput</key>
 	<string>document</string>
 	<key>input</key>

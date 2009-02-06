@@ -8,7 +8,7 @@
 	<string>#project selected: $TM_SELECTED_FILE
 require_cmd python2.6
 
-python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --fetch "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config"</string>
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --fetch "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config"|CocoaDialog progressbar --title "Fetch" --text "Fetching ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate</string>
 	<key>input</key>
 	<string>none</string>
 	<key>keyEquivalent</key>
