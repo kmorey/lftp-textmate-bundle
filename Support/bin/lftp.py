@@ -1,5 +1,7 @@
 #!/usr/local/bin/python2.6
-# TODO: handle multiple file put,fetch
+# TODO handle multiple file put,fetch
+# TODO handle multiple config folders
+# TODO handle lftp output
 import sys
 import os
 import subprocess
@@ -21,7 +23,7 @@ class OptionParser (optparse.OptionParser):
 
 DEBUG=True
 
-def run():
+def run():	
 	parser=OptionParser()
 	parser.add_option("-f", "--fetch", dest="fetch", help="full file path to download")
 	parser.add_option("-p", "--put", dest="put", help="full file path to upload")
@@ -36,8 +38,12 @@ def run():
 	#if not os.path.isfile(options.filename): return (False, 'File does not exist.')
 
 	#files=glob.glob('config/*.json')
-	files=glob.glob(options.config_dir+'/*.json')
-
+	config_path=getActualPath(options.config_dir)
+	
+	if DEBUG: print "using config dir: "+config_path
+	
+	files=glob.glob(os.path.join(config_path, "*.json"))
+	
 	readone=False
 	msg=""
 	for f in files:
@@ -54,9 +60,10 @@ def run():
 		if not 'local_path' in config: error=True
 		if not 'remote_path' in config: error=True
 		if error:
+			if DEBUG: print "invalid site"
 			continue
 	
-		local_path=os.path.realpath(config['local_path'])
+		local_path=getActualPath(config['local_path'])
 		relpath=os.path.relpath(getFilename(options), local_path)
 		
 		if DEBUG:
@@ -76,7 +83,16 @@ def run():
 				return (False, success_msg)
 			
 			#todo: get output as error
-			success=subprocess.call(cmd, shell=True)
+			proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			(output, error)=proc.communicate(None)
+			
+			if DEBUG:
+				print "<div style='background-color: #ccc; padding: 5px'><p style='font-weight: bold;'>lftp output</p>"
+				print output.replace("\n", "<br />\n")
+				print "</div>"
+			
+			success=proc.returncode
+			#success=subprocess.call(cmd, shell=True)
 			if success==0: 
 				msg+=success_msg+"\n"
 			else:
@@ -89,11 +105,14 @@ def run():
 	
 	return (readone, msg)
 
+def getActualPath(path):
+	return os.path.realpath(os.path.expanduser(path))
+	
 def getFtpCommand(options, config):	
 	#if DEBUG: print "Uploading '%s' to %s..." % (relpath, config['host'])
 	
 	fname = getFilename(options)
-	local_path=os.path.realpath(config['local_path'])
+	local_path=getActualPath(config['local_path'])
 	relpath = os.path.relpath(fname, local_path)
 	filename = os.path.basename(fname)
 
@@ -117,17 +136,18 @@ def getFtpCommand(options, config):
 	elif options.mirror is not None:
 		ftp_cmds = 'mirror -R %s %s' % (local_path, remote_path)
 		success_msg = "Mirrored '%s' from %s." % (local_path, config['host'])
-		
+	
+	ftp_cmds="set net:max-retries 1; set cmd:trace true; %s" % ftp_cmds
 	cmd = 'lftp -c "o %s; user %s %s; %s"' % (getHostUri(config), config['user'], config['pass'], ftp_cmds)
 
-	if DEBUG: print cmd
+	#if DEBUG: print cmd
 	
 	return (cmd, success_msg)
 
 def getFilename(options):
-	if options.put is not None: return options.put
-	if options.fetch is not None: return options.fetch
-	if options.mirror is not None: return options.mirror
+	if options.put is not None: return os.path.realpath(options.put)
+	if options.fetch is not None: return os.path.realpath(options.fetch)
+	if options.mirror is not None: return os.path.realpath(options.mirror)
 	
 	return None
 	
@@ -141,7 +161,7 @@ def getHostUri(config):
 
 def growl(title, message):	
 	subprocess.call('growlnotify -n lftp.bundle -t "%s" -m "%s"' % (title, message), shell=True)
-	
+
 (success, message) = run()
 if success:
 	growl('Success', message)
