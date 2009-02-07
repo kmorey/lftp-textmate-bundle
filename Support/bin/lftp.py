@@ -1,7 +1,6 @@
 #!/usr/local/bin/python2.6
 # TODO handle multiple file put,fetch
-# TODO handle multiple config folders
-# TODO handle lftp output
+# TODO give configured sites a "name" for more user-friendly display
 import sys
 import os
 import subprocess
@@ -28,24 +27,28 @@ def run():
 	parser.add_option("-f", "--fetch", dest="fetch", help="full file path to download")
 	parser.add_option("-p", "--put", dest="put", help="full file path to upload")
 	parser.add_option("-m", "--mirror", dest="mirror", help="full file path to mirror")
-	parser.add_option("-c", "--config", dest="config_dir", help="path to config dir")
-	parser.set_defaults(config_dir="config")
+	parser.add_option("-c", "--config", action="append", type="string", dest="config_dir", help="path to config dir")
+	#parser.set_defaults(config_dir="config")
 
 	(options, args) = parser.parse_args()
 	
 	parser.check_required(["-f", "-p", "-m"])
 
+	print options.config_dir
 	#if not os.path.isfile(options.filename): return (False, 'File does not exist.')
 
 	#files=glob.glob('config/*.json')
-	config_path=getActualPath(options.config_dir)
+	# config_path=getActualPath(options.config_dir)
 	
-	if DEBUG: print "using config dir: "+config_path
+	#if DEBUG: print "using config dir: "+config_path
 	
-	files=glob.glob(os.path.join(config_path, "*.json"))
+	files=[]
+	for config_path in options.config_dir:
+		files.extend(glob.glob(os.path.join(getActualPath(config_path), "*.json")))
 	
 	readone=False
 	msg=""
+	sites=[]
 	for f in files:
 		#load config
 		fp=open(f)
@@ -72,39 +75,69 @@ def run():
 			print local_path+"<br />"
 			print "relpath=%s<br />" % relpath
 			#print config
-		
+			print "<hr />"
 		
 		if relpath.find("..") == -1:
-			#we have a match
-			readone=True
-			
-			(cmd, success_msg) = getFtpCommand(options, config)
-			if cmd is None: #error
-				return (False, success_msg)
-			
-			#todo: get output as error
-			proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			(output, error)=proc.communicate(None)
-			
-			if DEBUG:
-				print "<div style='background-color: #ccc; padding: 5px'><p style='font-weight: bold;'>lftp output</p>"
-				print output.replace("\n", "<br />\n")
-				print "</div>"
-			
-			success=proc.returncode
-			#success=subprocess.call(cmd, shell=True)
-			if success==0: 
-				msg+=success_msg+"\n"
-			else:
-				msg+="fail?\n"
-				
-		if DEBUG: print "<hr />"
+			sites.append(f)
+	
+	if len(sites) == 0:
+		return (False, "No sites found for the current file.")
+		
+	#prompt user to choose
+	sites_str='"'+'", "'.join(sites)+'"'
+	applescript=" -e 'tell app \"TextMate\"'"
+	applescript+=" -e 'activate'"
+	applescript+=" -e 'choose from list {"+sites_str+"} with title \"Multiple Site Configs Match\" with prompt \"Select the sites to use below:\" multiple selections allowed true'"
+	applescript+=" -e 'end tell'"
+	
+	#print applescript
+	sites=callApplescript(applescript)
+	
+	# print sites
+	
+	for f in sites:
+		#load config
+		fp=open(f)
+		config=json.load(fp)
+		fp.close()
+		
+		if DEBUG: print "uploading to %s" % config['host']
+		readone=True
+		
+		(cmd, success_msg) = getFtpCommand(options, config)
+		if cmd is None: #error
+			print "returning early!"
+			return (False, success_msg)
+		
+		proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		(output, error)=proc.communicate(None)
+		
+		if DEBUG:
+			print "<div style='background-color: #ccc; padding: 5px'><p style='font-weight: bold;'>lftp output</p>"
+			print output.replace("\n", "<br />\n")
+			print "</div>"
+		
+		success=proc.returncode
+		#success=subprocess.call(cmd, shell=True)
+		if success==0: 
+			msg+=success_msg+"\n"
+		else:
+			msg+="fail?\n"
+		
 		
 	if not readone:
 		msg="No sites found for the current file."
 	
 	return (readone, msg)
 
+def callApplescript(script):
+	proc=subprocess.Popen("osascript "+script, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	(output, error)=proc.communicate(None)
+	
+	if proc.returncode == 0: return output.strip().split(", ")
+	
+	return []
+	
 def getActualPath(path):
 	return os.path.realpath(os.path.expanduser(path))
 	
