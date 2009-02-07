@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>saveActiveFile</string>
+	<key>command</key>
+	<string>#project selected: $TM_SELECTED_FILE
+require_cmd python2.6
+
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config" 2&gt; &gt;(CocoaDialog progressbar --title "Upload" --text "Uploading ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate)</string>
+	<key>fallbackInput</key>
+	<string>document</string>
+	<key>input</key>
+	<string>none</string>
+	<key>name</key>
+	<string>Save and Upload</string>
+	<key>output</key>
+	<string>discard</string>
+	<key>uuid</key>
+	<string>902F6C73-5F3D-4FC6-90A3-D9BC9077D1C6</string>
+</dict>
+</plist>
