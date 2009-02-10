@@ -14,7 +14,7 @@ python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPA
 	<key>input</key>
 	<string>none</string>
 	<key>keyEquivalent</key>
-	<string>@s</string>
+	<string></string>
 	<key>name</key>
 	<string>Save and Upload</string>
 	<key>output</key>
