@@ -48,7 +48,7 @@ def run():
 	
 	readone=False
 	msg=""
-	sites=[]
+	sites={}
 	for f in files:
 		#load config
 		fp=open(f)
@@ -78,22 +78,22 @@ def run():
 			print "<hr />"
 		
 		if relpath.find("..") == -1:
-			sites.append(f)
+			sites[config['name']] = f
 	
 	if len(sites) == 0:
+		growl('Failure', 'No sites found for the current file.')
 		return (False, "No sites found for the current file.")
-		
-	#prompt user to choose
-	sites_str='"'+'", "'.join(sites)+'"'
-	applescript=" -e 'tell app \"TextMate\"'"
-	applescript+=" -e 'activate'"
-	applescript+=" -e 'choose from list {"+sites_str+"} with title \"Multiple Site Configs Match\" with prompt \"Select the sites to use below:\" multiple selections allowed true'"
-	applescript+=" -e 'end tell'"
 	
-	#print applescript
-	sites=callApplescript(applescript)
+	if len(sites) > 1:
+		#prompt user to c	hoose
+		sites_str='"'+'", "'.join(sites.keys())+'"'
+		applescript=" -e 'tell app \"TextMate\"'"
+		applescript+=" -e 'activate'"
+		applescript+=" -e 'choose from list {"+sites_str+"} with title \"Multiple Site Configs Match\" with prompt \"Select the sites to use below:\" multiple selections allowed true'"
+		applescript+=" -e 'end tell'"
 	
-	# print sites
+		#print applescript
+		sites=callApplescript(applescript, sites)
 	
 	for f in sites:
 		#load config
@@ -107,6 +107,7 @@ def run():
 		(cmd, success_msg) = getFtpCommand(options, config)
 		if cmd is None: #error
 			print "returning early!"
+			growl('Failure', success_msg)
 			return (False, success_msg)
 		
 		proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -120,23 +121,30 @@ def run():
 		success=proc.returncode
 		#success=subprocess.call(cmd, shell=True)
 		if success==0: 
-			msg+=success_msg+"\n"
+			growl('Success', success_msg)
+			# msg+=success_msg+"\n"
 		else:
-			msg+="fail?\n"
-		
+			growl('Failure', 'An error occurred in lftp.')
+			# msg+="fail?\n"		
 		
 	if not readone:
 		msg="No sites found for the current file."
+		growl('Failure', msg)
 	
 	return (readone, msg)
 
-def callApplescript(script):
+def callApplescript(script, sites):
+	
+	out = []
+	
 	proc=subprocess.Popen("osascript "+script, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	(output, error)=proc.communicate(None)
 	
-	if proc.returncode == 0: return output.strip().split(", ")
+	if proc.returncode == 0: 
+		for key in output.strip().split(", "):
+			out.append(sites[key])
 	
-	return []
+	return out
 	
 def getActualPath(path):
 	return os.path.realpath(os.path.expanduser(path))
@@ -196,7 +204,8 @@ def growl(title, message):
 	subprocess.call('growlnotify -n lftp.bundle -t "%s" -m "%s"' % (title, message), shell=True)
 
 (success, message) = run()
-if success:
-	growl('Success', message)
-else:
-	growl('Failure', message)
+# if success:
+# 	growl('Success', message)
+# else:
+#if not success:
+#	growl('Failure', message)
