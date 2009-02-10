@@ -84,7 +84,9 @@ def run():
 		growl('Failure', 'No sites found for the current file.')
 		return (False, "No sites found for the current file.")
 	
-	if len(sites) > 1:
+	if len(sites) == 1:
+		sites=[sites.values()[0]]
+	else:
 		#prompt user to c	hoose
 		sites_str='"'+'", "'.join(sites.keys())+'"'
 		applescript=" -e 'tell app \"TextMate\"'"
