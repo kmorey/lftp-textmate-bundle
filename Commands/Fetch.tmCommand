@@ -5,10 +5,23 @@
 	<key>beforeRunningCommand</key>
 	<string>nop</string>
 	<key>command</key>
-	<string>#project selected: $TM_SELECTED_FILE
+	<string>
+config=(
+"~/Dropbox/TextMate/config"
+"~/TextMate/config"
+)
+
+##
+## No need to edit below this point
+##
 require_cmd python2.6
 
-python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --fetch "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config" -c "~/TextMate/config" 2&gt; &gt;(CocoaDialog progressbar --title "Fetch" --text "Fetching ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate --width 600)</string>
+configs=""
+for item in ${config[@]}; do
+  configs="$configs -c $item"
+done
+
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --fetch "${TM_SELECTED_FILE:-$TM_FILEPATH}" $configs 2&gt; &gt;(CocoaDialog progressbar --title "Fetch" --text "Fetching ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate --width 600)</string>
 	<key>input</key>
 	<string>none</string>
 	<key>keyEquivalent</key>
@@ -16,7 +29,7 @@ python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --fetch "${TM_SELECTED_FILE:-$TM_FILE
 	<key>name</key>
 	<string>Fetch</string>
 	<key>output</key>
-	<string>showAsHTML</string>
+	<string>discard</string>
 	<key>uuid</key>
 	<string>91AA5078-41F3-4FEB-932B-3A41652A920F</string>
 </dict>

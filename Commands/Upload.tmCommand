@@ -5,10 +5,23 @@
 	<key>beforeRunningCommand</key>
 	<string>nop</string>
 	<key>command</key>
-	<string>#project selected: $TM_SELECTED_FILE
+	<string>
+config=(
+"~/Dropbox/TextMate/config"
+"~/TextMate/config"
+)
+
+##
+## No need to edit below this point
+##
 require_cmd python2.6
 
-python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPATH}" -c "~/Dropbox/TextMate/config" -c "~/TextMate/config" 2&gt; &gt;(CocoaDialog progressbar --title "Upload" --text "Uploading ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate --width 600)</string>
+configs=""
+for item in ${config[@]}; do
+  configs="$configs -c $item"
+done
+
+python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPATH}" $configs 2&gt; &gt;(CocoaDialog progressbar --title "Upload" --text "Uploading ${TM_SELECTED_FILE:-$TM_FILEPATH}..." --indeterminate --width 600)</string>
 	<key>fallbackInput</key>
 	<string>document</string>
 	<key>input</key>
@@ -18,7 +31,7 @@ python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --put "${TM_SELECTED_FILE:-$TM_FILEPA
 	<key>name</key>
 	<string>Upload</string>
 	<key>output</key>
-	<string>showAsHTML</string>
+	<string>discard</string>
 	<key>uuid</key>
 	<string>62659EB6-CA9A-4315-92BF-6DEAD6161E86</string>
 </dict>
