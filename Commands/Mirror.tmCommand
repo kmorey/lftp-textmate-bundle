@@ -12,11 +12,11 @@ python2.6 "$TM_BUNDLE_SUPPORT/bin/lftp.py" --mirror "$TM_SELECTED_FILE" -c "~/Dr
 	<key>input</key>
 	<string>none</string>
 	<key>keyEquivalent</key>
-	<string>~@p</string>
+	<string>@P</string>
 	<key>name</key>
 	<string>Mirror (push)</string>
 	<key>output</key>
-	<string>discard</string>
+	<string>showAsHTML</string>
 	<key>uuid</key>
 	<string>7E11CEBC-BDAA-45B5-BFED-75AA0CA5F426</string>
 </dict>

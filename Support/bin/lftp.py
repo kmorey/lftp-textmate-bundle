@@ -171,10 +171,10 @@ def getFtpCommand(options, config):
 	success_msg = None
 	if options.put is not None:
 		if not os.path.isfile(options.put): return (None, 'File does not exist.')
-		ftp_cmds = 'lcd %s; mkdir -p %s; cd %s; put %s' % (config['local_path'], remote_path, remote_path, relpath)
+		ftp_cmds = 'lcd %s; mkdir -p %s; cd %s; put %s' % (local_path, remote_path, remote_path, filename)
 		success_msg = "Uploaded '%s' to %s." % (filename, config['host'])
 	elif options.fetch is not None:
-		ftp_cmds = 'lcd %s; cd %s; get %s' % (local_path, remote_path, relpath)
+		ftp_cmds = 'lcd %s; cd %s; get %s' % (local_path, remote_path, filename)
 		success_msg = "Fetched '%s' from %s." % (filename, config['host'])
 	elif options.mirror is not None:
 		ftp_cmds = 'mirror -R %s %s' % (local_path, remote_path)
